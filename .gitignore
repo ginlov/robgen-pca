@@ -1,2 +1,3 @@
 cifar_train/
 cifar_val/
+*/__pycache__/

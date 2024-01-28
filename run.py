@@ -10,14 +10,14 @@ import numpy as np
 import torch
 
 num_cluster = 10000
-sigma = 0.01
+sigma = [0.01, 0.05, 0.1]
+num_component = 300
 
 def start_train(
         args: argparse.Namespace,
     ):
     # create model
-    model = PCA(n_components=100)
-    dataset = args.dataset
+    model = PCA(n_components=num_component)
     train_dataset, valid_dataset = load_dataset(args.dataset)
     num_items = len(train_dataset)
 
@@ -102,7 +102,9 @@ def cal_g(model, args):
             list_of_a.append(cluster_loss.mean())
 
     TD = unique_ids.shape[0]
-    g_value = cal_g3(k=num_cluster, sigma=sigma, total_num_items=num_items, cluster_num_item=list_of_num_item, list_of_a=list_of_a, TS=TD)
+    g_value = []
+    for sigma_value in sigma:
+        g_value.append(cal_g3(k=num_cluster, sigma=sigma_value, total_num_items=num_items, cluster_num_item=list_of_num_item, list_of_a=list_of_a, TS=TD))
 
     total_loss_subtraction = torch.abs(torch.cdist(torch.tensor(valid_loss).reshape(-1, 1), torch.tensor(train_loss).reshape(-1, 1)))
     robustness = torch.max(total_loss_subtraction.reshape(-1)).item()
@@ -114,7 +116,9 @@ def cal_g(model, args):
                                                 num_items=num_items)
 
     print(f"""
-    g value {g_value},
+    g value {sigma[0]} {g_value[0]},
+    g value {sigma[1]} {g_value[1]},
+    g value {sigma[2]} {g_value[2]},
     robustness {robustness},
     local_robustness {local_robustness},
     the_rest_theorem_five {the_rest_theorem_five}
